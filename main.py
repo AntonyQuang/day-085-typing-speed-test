@@ -23,31 +23,29 @@ class TypingTest:
     def __init__(self):
         # Title
         self.title = Label(root, text="Typing Speed Test")
-        self.title.grid(row=0, column=0, columnspan=2)
+        self.title.grid(row=0, column=0, columnspan=2, pady=5)
 
         # Body
         self.body = Frame(root)
         self.body.grid(row=1, column=0, columnspan=2)
         self.body.config(padding=4)
-        self.body["borderwidth"]=10
+        self.body["borderwidth"] = 10
+        self.body["relief"] = "solid"
 
         # Stats
         self.cpm_label = Label(self.body, text="Corrected CPM: ")
         self.cpm_label.grid(row=0, column=0)
-        self.cpm = Entry(self.body, width=5)
-        self.cpm.insert(0, "?")
-        self.cpm.grid(row=0, column=1)
+        self.cpm = Label(self.body, text="?", width=5, borderwidth=2, relief="solid", anchor="center")
+        self.cpm.grid(row=0, column=1,)
 
         self.wpm_label = Label(self.body, text="WPM: ")
         self.wpm_label.grid(row=0, column=2)
-        self.wpm = Entry(self.body, width=5)
-        self.wpm.insert(0, "?")
+        self.wpm = Label(self.body, text="?", width=5, borderwidth=2, relief="solid", anchor="center")
         self.wpm.grid(row=0, column=3)
 
         self.timer_label = Label(self.body, text="Time left: ")
         self.timer_label.grid(row=0, column=4)
-        self.timer = Entry(self.body, width=5)
-        self.timer.insert(0, "60")
+        self.timer = Label(self.body, text="60", width=5, borderwidth=2, relief="solid", anchor="center")
         self.timer.grid(row=0, column=5)
 
         # Words
@@ -56,6 +54,7 @@ class TypingTest:
 
         for word in word_list:
             self.words.insert("end", f"{word} ")
+        self.words.config(state="disabled")
 
         # Typing Zone
         self.typer = Entry(self.body, width=66, justify="center")
@@ -64,10 +63,18 @@ class TypingTest:
 
         # Buttons
         self.quit_btn = Button(root, text="Quit", command=root.destroy)
-        self.quit_btn.grid(row=3, column=0)
+        self.quit_btn.grid(row=3, column=0, pady=10)
 
         self.restart_btn = Button(root, text="Restart")
-        self.restart_btn.grid(row=3, column=1)
+        self.restart_btn.grid(row=3, column=1, pady=10)
+
+    # ------------ Logic --------------- #
+
+    def countdown(self):
+        pass
+
+
+
 
 
 typing = TypingTest()
