@@ -26,6 +26,7 @@ class TypingTest:
         self.time_limit = 60
         self.cpm_score = 0
         self.wpm_score = 0
+        self.position = 0
 
         # Title
         self.title = Label(root, text="Typing Speed Test")
@@ -61,7 +62,10 @@ class TypingTest:
         self.words.grid(row=1, column=0, columnspan=6, pady=5)
 
         for word in word_list:
+            word = word.lower()
             self.words.insert("end", f"{word} ")
+
+        self.string_of_words = self.words.get("1.0", "end")
 
         # Typing Zone
         self.typer = Entry(self.body, width=66, justify="center")
@@ -79,13 +83,17 @@ class TypingTest:
     # ----------- LOGIC -------------- #
 
     def start(self, event):
-        self.typer.unbind("<KeyRelease>")
         self.time = 0
+        self.position = 0
         self.countdown()
+        self.input_handler(event)
+        self.typer.bind("<KeyRelease>", self.input_handler)
 
     def countdown(self):
-        if self.time > self.time_limit:
-            return
+        if self.time == self.time_limit:
+            self.typer.config(state="disabled")
+        elif self.time > self.time_limit:
+            self.typer.config(state="normal")
         else:
             self.time += 1
             time_remaining = self.time_limit - self.time
@@ -101,26 +109,42 @@ class TypingTest:
         self.wpm.delete(0, "end")
         self.cpm.delete(0, "end")
         self.typer.delete(0, "end")
+        self.words.tag_delete("correct_char", "incorrect_char")
 
         # Back to starting values
-
         self.timer.insert(0, f"{self.time_limit}")
         self.wpm.insert(0, "?")
         self.cpm.insert(0, "?")
-        self.typer.bind("<KeyRelease>", self.start)
         self.typer.focus()
+        self.typer.bind("<KeyRelease>", self.start)
 
+    def input_handler(self, event):
+        if event.char:
+            self.check_char(event)
+        elif event.keysym == "BackSpace":
+            self.backspace()
 
+    def check_char(self, event):
+        char_typed = event.char
+        if char_typed == self.string_of_words[self.position]:
+            self.words.tag_add("correct_char", f"1.{self.position}", f"1.{self.position + 1}")
+            self.words.tag_config("correct_char", background="blue")
+            print(f"{char_typed} - Correct")
+        else:
+            print(f"{char_typed} - Incorrect")
+            self.words.tag_add("incorrect_char", f"1.{self.position}", f"1.{self.position + 1}")
+            self.words.tag_config("incorrect_char", background="red")
+        self.position += 1
+
+    def backspace(self):
+        self.position -= 1
+        self.words.tag_remove("correct_char", f"1.{self.position}", f"1.{self.position + 1}")
+        self.words.tag_remove("incorrect_char", f"1.{self.position}", f"1.{self.position + 1}")
 
 typing = TypingTest()
 root.mainloop()
 
 #TODO 2. Get a set of random words
-
-
-
-
-#TODO 3. Have a timer
 
 #TODO 4. Matching thing (on space)
 
