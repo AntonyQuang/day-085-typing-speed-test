@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter.ttk import *
 import sv_ttk
 import pandas
+import random
 
 #TODO 1. Set out GUI
 
@@ -27,6 +28,9 @@ class TypingTest:
         self.cpm_score = 0
         self.wpm_score = 0
         self.position = 0
+        self.word_number = 0
+        self.cpm_correct_total = 0
+
 
         # Title
         self.title = Label(root, text="Typing Speed Test")
@@ -60,6 +64,7 @@ class TypingTest:
         # Words
         self.words = tk.Text(self.body, width=50, height=5, wrap="word")
         self.words.grid(row=1, column=0, columnspan=6, pady=5)
+        random.shuffle(word_list)
 
         for word in word_list:
             word = word.lower()
@@ -85,6 +90,8 @@ class TypingTest:
     def start(self, event):
         self.time = 0
         self.position = 0
+        self.word_number = 0
+        self.cpm_correct_total = 0
         self.countdown()
         self.input_handler(event)
         self.typer.bind("<KeyRelease>", self.input_handler)
@@ -92,6 +99,7 @@ class TypingTest:
     def countdown(self):
         if self.time == self.time_limit:
             self.typer.config(state="disabled")
+            self.typer.unbind()
         elif self.time > self.time_limit:
             self.typer.config(state="normal")
         else:
@@ -110,6 +118,8 @@ class TypingTest:
         self.cpm.delete(0, "end")
         self.typer.delete(0, "end")
         self.words.tag_delete("correct_char", "incorrect_char")
+        self.words.delete("1.0", "end")
+
 
         # Back to starting values
         self.timer.insert(0, f"{self.time_limit}")
@@ -117,6 +127,13 @@ class TypingTest:
         self.cpm.insert(0, "?")
         self.typer.focus()
         self.typer.bind("<KeyRelease>", self.start)
+        self.words.config(state="normal")
+        random.shuffle(word_list)
+        for word in word_list:
+            word = word.lower()
+            self.words.insert("end", f"{word} ")
+        self.string_of_words = self.words.get("1.0", "end")
+        self.words.config(state="disabled")
 
     def input_handler(self, event):
         if event.char:
@@ -126,20 +143,63 @@ class TypingTest:
 
     def check_char(self, event):
         char_typed = event.char
-        if char_typed == self.string_of_words[self.position]:
+        if char_typed == " ":
+            self.check_word()
+        elif char_typed == self.string_of_words[self.position]:
             self.words.tag_add("correct_char", f"1.{self.position}", f"1.{self.position + 1}")
             self.words.tag_config("correct_char", background="blue")
-            print(f"{char_typed} - Correct")
         else:
-            print(f"{char_typed} - Incorrect")
             self.words.tag_add("incorrect_char", f"1.{self.position}", f"1.{self.position + 1}")
             self.words.tag_config("incorrect_char", background="red")
         self.position += 1
 
     def backspace(self):
-        self.position -= 1
-        self.words.tag_remove("correct_char", f"1.{self.position}", f"1.{self.position + 1}")
-        self.words.tag_remove("incorrect_char", f"1.{self.position}", f"1.{self.position + 1}")
+        if self.typer.get():
+            self.position -= 1
+            self.words.tag_remove("correct_char", f"1.{self.position}", f"1.{self.position + 1}")
+            self.words.tag_remove("incorrect_char", f"1.{self.position}", f"1.{self.position + 1}")
+
+    def check_word(self):
+        word_to_check_against = word_list[self.word_number].lower()
+        input_word = self.typer.get().removesuffix(" ").lower()
+        print(self.position)
+
+        if input_word == word_to_check_against:
+            print("correct")
+
+            self.words.tag_remove("correct_char", f"1.{self.position - len(input_word)}", f"1.{self.position}")
+            self.words.tag_remove("incorrect_char", f"1.{self.position - len(input_word)}", f"1.{self.position}")
+
+        else:
+            print("incorrect")
+            self.words.tag_remove("correct_char", f"1.{self.position - len(input_word)}", f"1.{self.position}")
+            self.words.tag_remove("incorrect_char", f"1.{self.position - len(input_word)}", f"1.{self.position}")
+
+        self.position = -1
+
+        for i in range(self.word_number+1):
+            self.position += len(word_list[i]) + 1
+
+        if input_word == word_to_check_against:
+            self.words.tag_add("correct_char", f"1.{self.position - len(word_list[self.word_number])}", f"1.{self.position}")
+
+            self.cpm_correct_total += len(word_list[self.word_number])
+            self.cpm_score = self.cpm_correct_total/(self.time_limit/60)
+            self.cpm.delete(0, "end")
+            self.cpm.insert(0, f"{self.cpm_score}")
+
+            self.wpm_score = self.cpm_score/5
+            self.wpm.delete(0, "end")
+            self.wpm.insert(0, f"{self.wpm_score}")
+        else:
+            self.words.tag_add("incorrect_char", f"1.{self.position - len(word_list[self.word_number])}",
+                               f"1.{self.position}")
+
+        self.typer.delete(0, "end")
+        self.word_number += 1
+        print(self.position)
+
+
 
 typing = TypingTest()
 root.mainloop()
